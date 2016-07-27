@@ -217,6 +217,8 @@ void swap_tasks(struct task* a,
     /* swap the contents of two tasks */
     unsigned short  ustmp;
     unsigned int    uitmp;
+    unsigned long   ultmp;
+    float           uftmp;
     char*           strtmp;
     char            ctmp;
 
@@ -259,6 +261,16 @@ void swap_tasks(struct task* a,
     strtmp         = a->description;
     a->description = b->description;
     b->description = strtmp;
+
+    ultmp         = a->totalactivetime;
+    a->totalactivetime = b->totalactivetime;
+    b->totalactivetime = ultmp;
+
+    uftmp         = a->urgency;
+    a->urgency = b->urgency;
+    b->urgency = uftmp;
+
+
 } /* }}} */
 
 // vim: et ts=4 sw=4 sts=4

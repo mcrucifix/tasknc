@@ -10,7 +10,7 @@
 #include <time.h>
 #include "common.h"
 
-void key_tasklist_add(void);
+void key_tasklist_add(const char* arg);
 void key_tasklist_complete(void);
 void key_tasklist_delete(void);
 void key_tasklist_edit(void);

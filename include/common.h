@@ -63,9 +63,11 @@ struct task {
     time_t end;
     time_t entry;
     time_t due;
+    time_t totalactivetime;
     char* project;
     char priority;
     char* description;
+    float urgency;
     /* color caching */
     int selpair;
     int pair;
@@ -86,14 +88,17 @@ enum fmt_field_type {
     FIELD_DATE,
     FIELD_PROJECT,
     FIELD_DESCRIPTION,
+    FIELD_ENTRY,
+    FIELD_URGENCY,
     FIELD_DUE,
+    FIELD_TOTALACTIVETIME,
     FIELD_PRIORITY,
     FIELD_UUID,
     FIELD_INDEX,
     FIELD_STRING,
     FIELD_VAR,
     FIELD_CONDITIONAL,
-    FIELD_TIME
+    FIELD_TIME, 
 };
 
 struct conditional_fmt_field; /* forward declaration */

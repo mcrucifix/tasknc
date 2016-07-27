@@ -198,7 +198,7 @@ void configure(void) { /* {{{ */
 
     /* set default formats */
     cfg.formats.title = strdup(" $program_name ($selected_line/$task_count) $> $date");
-    cfg.formats.task  = strdup(" $project $description $> ?$due?$due?$-6priority?");
+    cfg.formats.task  = strdup(" $project $description $> ?$due?$due?$-2priority?");
     cfg.formats.view  = strdup(" task info");
 
     /* set initial filter */
@@ -207,12 +207,17 @@ void configure(void) { /* {{{ */
     }
 
     /* get task version */
-    cmd = popen("task --version", "r");
+    cmd = popen("task --version ", "r");
+  
 
     while (ret != 1) {
-        ret = fscanf(cmd, "%m[0-9.-] ", &(cfg.version));
+        cfg.version = malloc ( 80 ) ;
+        ret = fscanf(cmd, "%[0-9.-] ", (cfg.version)); 
+        /*ret = fscanf(cmd, "%[0-9.-] ", str1); */
+        /*cfg.version = str1;  */
     }
 
+    printf("task version: %s", cfg.version);
     tnc_fprintf(logfp, LOG_DEBUG, "task version: %s", cfg.version);
     pclose(cmd);
 
@@ -242,6 +247,7 @@ void configure(void) { /* {{{ */
     add_keybind('d',           key_tasklist_delete,      NULL, MODE_ANY);
     add_keybind('c',           key_tasklist_complete,    NULL, MODE_ANY);
     add_keybind('a',           key_tasklist_add,         NULL, MODE_TASKLIST);
+    add_keybind('m',           key_tasklist_modify,      NULL, MODE_TASKLIST);
     add_keybind('v',           key_tasklist_view,        NULL, MODE_TASKLIST);
     add_keybind(13,            key_tasklist_view,        NULL, MODE_TASKLIST);
     add_keybind(KEY_ENTER,     key_tasklist_view,        NULL, MODE_TASKLIST);
@@ -287,9 +293,10 @@ struct funcmap* find_function(const char* name, const enum prog_mode mode) { /* 
     for (int i = 0; i < NFUNCS; i++) {
         if (str_eq(name, funcmaps[i].name) && (funcmaps[i].mode == MODE_ANY ||
                                                mode == funcmaps[i].mode || mode == MODE_ANY)) {
+
             return &(funcmaps[i]);
         }
-    }
+    };
 
     return NULL;
 } /* }}} */

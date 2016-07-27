@@ -27,6 +27,7 @@ void task_count(void);
 int task_interactive_command(const char* cmdfmt);
 bool task_match(const struct task* cur, const char* str);
 void task_modify(const char* argstr);
+void task_add(const char* argstr);
 
 extern FILE* logfp;
 extern struct task* head;

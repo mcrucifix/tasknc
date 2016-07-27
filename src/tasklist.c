@@ -32,11 +32,11 @@ void tasklist_command_message(const int ret,
                               const char* fail,
                               const char* success);
 
-void key_tasklist_add(void) { /* {{{ */
-    /* handle a keyboard direction to add new task */
-    tasklist_task_add();
-    reload = 1;
-} /* }}} */
+ // void key_tasklist_add(void) { /* {{{ */
+ //     /* handle a keyboard direction to add new task */
+ //     tasklist_task_add();
+ //     reload = 1;
+ // } /* }}} */
 
 void key_tasklist_complete(void) { /* {{{ */
     /* complete selected task */
@@ -125,6 +125,34 @@ void key_tasklist_modify(const char* arg) { /* {{{ */
     statusbar_message(cfg.statusbar_timeout, "task modified");
     redraw = true;
 } /* }}} */
+
+
+void key_tasklist_add(const char* arg) { /* {{{ */
+    /* handle a keyboard direction to add a task
+     * arg - the modifications to apply (pass NULL to prompt user)
+     *       this will be appended to `task UUID add `
+     */
+    char* argstr;
+
+    if (arg == NULL) {
+        statusbar_getstr(&argstr, "add: ");
+        wipe_statusbar();
+    } else {
+        argstr = strdup(arg);
+    }
+
+    task_add(argstr);
+    free(argstr);
+
+    statusbar_message(cfg.statusbar_timeout, "task added");
+    redraw = true;
+} /* }}} */
+
+
+
+
+
+
 
 void key_tasklist_reload(void) { /* {{{ */
     /* wrapper function to handle keyboard instruction to reload task list */
@@ -326,9 +354,12 @@ void key_tasklist_toggle_started(void) { /* {{{ */
     char*           action;
     char*           actionpast;
     char*           reply;
+    char            status_out[200];
     FILE*           cmdout;
     int             ret;
+    int             ret_status_out;
     bool            started = cur->start > 0;/* check whether task is started */
+
 
     /* generate command */
     cmdstr = calloc(UUIDLENGTH + 16, sizeof(char));
@@ -336,10 +367,18 @@ void key_tasklist_toggle_started(void) { /* {{{ */
     strcat(cmdstr, cur->uuid);
     action = started ? " stop" : " start";
     strcat(cmdstr, action);
+    strcat(cmdstr, " 2>&1"); 
+
+    tnc_fprintf(logfp, LOG_DEBUG, "running command: %s", cmdstr);
+    /*printf( "running command: %s", cmdstr);*/
+    /* added to redirect ouptut */
 
     /* run command */
     cmdout = popen(cmdstr, "r");
     free(cmdstr);
+    ret_status_out = fscanf(cmdout, "%[^\n]", status_out);
+    /* printf("status out ::: %s ", status_out); */
+    ret_status_out = 1;
     ret = pclose(cmdout);
 
     /* check return value */
@@ -354,7 +393,7 @@ void key_tasklist_toggle_started(void) { /* {{{ */
     } else {
         asprintf(&reply, "task%s failed (%d)", action, WEXITSTATUS(ret));
     }
-
+    if (ret_status_out > 0) strcat (reply, status_out);
     statusbar_message(cfg.statusbar_timeout, reply);
     free(reply);
 } /* }}} */

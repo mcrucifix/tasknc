@@ -24,6 +24,8 @@ static time_t strtotime(const char* timestr);
 static void set_char(char* field, char** line);
 static void set_date(time_t* field, char** line);
 static void set_int(unsigned short* field, char** line);
+static void set_float(float* field, char** line);
+static void set_duration(long* field, char** line);
 static void set_string(char** field, char** line);
 
 char free_task(struct task* tsk) { /* {{{ */
@@ -288,9 +290,11 @@ struct task* malloc_task(void) { /* {{{ */
     tsk->end            = 0;
     tsk->entry          = 0;
     tsk->due            = 0;
+    tsk->totalactivetime = 0;
     tsk->project        = NULL;
     tsk->priority       = 0;
     tsk->description    = NULL;
+    tsk->urgency        = 0.000;
     tsk->next           = NULL;
     tsk->prev           = NULL;
     tsk->pair           = -1;
@@ -318,6 +322,7 @@ struct task* parse_task(char* line) { /* {{{ */
     while (*line != 0) {
         /* local vars */
         char* field = NULL;
+        field = malloc ( 1000 );
         int ret;
 
         /* skip field delimiters */
@@ -332,7 +337,7 @@ struct task* parse_task(char* line) { /* {{{ */
         }
 
         /* get field */
-        ret = sscanf(line, "\"%m[^\"]\":", &field);
+        ret = sscanf(line, "\"%[^\"]\":", field);
 
         if (ret != 1) {
             tnc_fprintf(logfp, LOG_ERROR, "error parsing task @ %s", line);
@@ -361,12 +366,18 @@ struct task* parse_task(char* line) { /* {{{ */
             tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, "string: %s", tsk->tags);
         } else if (str_eq(field, "uuid")) {
             set_string(&(tsk->uuid), &line);
-        } else if (str_eq(field, "entry")) {
+        } else if (str_eq(field, "start")) {
+            set_date(&(tsk->start), &line);
+         } else if (str_eq(field, "entry")) {
             set_date(&(tsk->entry), &line);
         } else if (str_eq(field, "due")) {
             set_date(&(tsk->due), &line);
+        } else if (str_eq(field, "totalactivetime")) {
+            set_duration(&(tsk->totalactivetime), &line); 
         } else if (str_eq(field, "priority")) {
             set_char(&(tsk->priority), &line);
+        } else if (str_eq(field, "urgency")) {
+            set_float(&(tsk->urgency), &line); 
         } else if (str_eq(field, "annotations")) {
             while (*line != ']') {
                 line++;
@@ -519,13 +530,16 @@ void set_char(char* field, char** line) { /* {{{ */
     }
 } /* }}} */
 
+
+
 void set_date(time_t* field, char** line) { /* {{{ */
     /* set a time field from the next contents of line
      * field - the field set the time in
      * line  - the line to parse the time from
      */
     char*   tmp;
-    int     ret = sscanf(*line, "\"%m[^\"]\"", &tmp);
+    tmp = malloc(200);
+    int     ret = sscanf(*line, "\"%[^\"]\"", tmp);
 
     if (ret != 1) {
         tnc_fprintf(logfp, LOG_ERROR, "error parsing time @ %s", *line);
@@ -557,6 +571,52 @@ void set_int(unsigned short* field, char** line) { /* {{{ */
         (*line)++;
     }
 } /* }}} */
+
+void set_float(float* field, char** line) { /* {{{ */
+    /* set an integer field from the next contents of line
+     * field - the field set the integer in
+     * line  - the line to parse the integer from
+     */
+    int ret = sscanf(*line, "%f", field);
+
+    if (ret != 1) {
+        tnc_fprintf(logfp, LOG_ERROR, "error parsing float @ %s", *line);
+    } else {
+        tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, "float: %f", *field);
+    }
+
+    while (**line != ',' &&** line != '}') {
+        (*line)++;
+    }
+} /* }}} */
+
+
+
+void set_duration(long* field, char** line) { /* {{{ */
+    /* set an integer field from the next contents of line
+     * field - the field set the integer in
+     * line  - the line to parse the integer from
+     */
+
+    char*   tmp;
+    tmp = malloc(10);
+    char*   tmp2;
+    tmp2 = malloc(10);
+    int     ret = sscanf(*line, "\"%[0-9]%[seconds]\"", tmp, tmp2);
+    ret = sscanf(tmp, "%ld", field);
+
+    if (ret != 1) {
+        tnc_fprintf(logfp, LOG_ERROR, "error parsing activetime  @ %s", *line);
+    } else {
+        tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, "time: %ld", *field);
+    }
+
+    while (**line != ',' &&** line != '}') {
+        (*line)++;
+    }
+} /* }}} */
+
+
 
 void set_string(char** field, char** line) { /* {{{ */
     /* set an string field from the next contents of line
@@ -643,8 +703,10 @@ int task_background_command(const char* cmdfmt) { /* {{{ */
     cmd = popen(cmdstr, "r");
     free(cmdstr);
 
+
     while (!feof(cmd)) {
-        ret = fscanf(cmd, "%m[^\n]*", &line);
+        line = malloc(256);
+        ret = fscanf(cmd, "%[^\n]*", line);
 
         if (ret == 1) {
             tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, line);
@@ -728,6 +790,36 @@ bool task_match(const struct task* cur, const char* str) { /* {{{ */
         return 0;
     }
 } /* }}} */
+
+void task_add(const char* argstr) { /* {{{ */
+    /* run a modify command on the selected task
+     * argstr - the command to run on the selected task
+     *          this will be appended to `task UUID modify `
+     */
+    char*           cmd;
+    int             arglen;
+
+    if (argstr != NULL) {
+        arglen = strlen(argstr);
+    } else {
+        arglen = 0;
+    }
+
+    cmd = calloc(64 + arglen, sizeof(char));
+
+    strcpy(cmd, "task add ");
+
+    if (arglen > 0) {
+        strcat(cmd, argstr);
+    }
+
+    task_background_command(cmd);
+
+
+    free(cmd);
+} /* }}} */
+
+
 
 void task_modify(const char* argstr) { /* {{{ */
     /* run a modify command on the selected task

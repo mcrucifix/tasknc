@@ -33,6 +33,9 @@ void handle_command(char* cmdstr) { /* {{{ */
     enum prog_mode  mode;
     int             ret = 0;
 
+    command = malloc(1000);
+    args = malloc(1000);
+
     /* parse args */
     pos = strchr(cmdstr, '\n');
 
@@ -43,7 +46,7 @@ void handle_command(char* cmdstr) { /* {{{ */
     tnc_fprintf(logfp, LOG_DEBUG, "command received: %s", cmdstr);
 
     if (cmdstr != NULL) {
-        ret = sscanf(cmdstr, "%ms %m[^\n]", &command, &args);
+        ret = sscanf(cmdstr, "%s %[^\n]", command, args);
     }
 
     if (ret < 1) {
@@ -148,8 +151,13 @@ void run_command_bind(char* args) { /* {{{ */
     void (*func)();
 
     /* parse command */
+        modestr=malloc(1000);
+        keystr = malloc(1000);
+        function = malloc(1000);
+        arg = malloc(1000);
+   
     if (args != NULL) {
-        ret = sscanf(args, "%ms %ms %ms %m[^\n]", &modestr, &keystr, &function, &arg);
+        ret = sscanf(args, "%s %s %s %[^\n]", modestr, keystr, function, arg);
     }
 
     if (ret < 3) {
@@ -220,9 +228,14 @@ void run_command_color(char* args) { /* {{{ */
     int                 fgc;
     int                 bgc;
 
+    object = malloc(200);
+    fg = malloc(200);
+    bg = malloc(200);
+    rule = malloc(200);
+
     if (args != NULL) {
-        ret = sscanf(args, "%ms %m[a-z0-9-] %m[a-z0-9-] %m[^\n]", &object, &fg, &bg,
-                     &rule);
+        ret = sscanf(args, "%s %[a-z0-9-] %[a-z0-9-] %[^\n]", object, fg, bg,
+                     rule);
     }
 
     if (ret < 3) {
@@ -282,9 +295,11 @@ void run_command_unbind(char* argstr) { /* {{{ */
     enum prog_mode  mode;
     int             ret = 0;
 
+    modestr = malloc(200);
+    keystr  = malloc(200);
     /* parse args */
     if (argstr != NULL) {
-        ret = sscanf(argstr, "%ms %m[^\n]", &modestr, &keystr);
+        ret = sscanf(argstr, "%s %[^\n]", modestr, keystr);
     }
 
     if (ret != 2) {
@@ -328,9 +343,12 @@ void run_command_set(char* args) { /* {{{ */
     char*       value   = NULL;
     int         ret     = 0;
 
+    varname = malloc(200);
+    value = malloc(200);
+
     /* parse args */
     if (args != NULL) {
-        ret = sscanf(args, "%ms %m[^\n]", &varname, &value);
+        ret = sscanf(args, "%s %[^\n]", varname, value);
     }
 
     if (ret != 2) {
@@ -416,7 +434,8 @@ void run_command_show(const char* arg) { /* {{{ */
 
     /* parse arg */
     if (arg != NULL) {
-        ret = sscanf(arg, "%m[^\n]", &message);
+        message = malloc(200);
+        ret = sscanf(arg, "%[^\n]", message);
     }
 
     if (ret != 1) {

@@ -85,7 +85,10 @@ struct fmt_field* compile_format_string(char* fmt) { /* {{{ */
     static const char* task_field_map[] = {
         [FIELD_PROJECT]     = "project",
         [FIELD_DESCRIPTION] = "description",
+        [FIELD_URGENCY]     = "urgency",
+        [FIELD_TOTALACTIVETIME] = "totalactivetime",
         [FIELD_DUE]         = "due",
+        [FIELD_ENTRY]         = "entry",
         [FIELD_PRIORITY]    = "priority",
         [FIELD_UUID]        = "uuid",
         [FIELD_INDEX]       = "index"
@@ -365,14 +368,32 @@ static char* field_to_str(struct fmt_field* this, bool* free_field,
         break;
 
     case FIELD_PROJECT:
-        ret = tsk->project;
+        if (tsk->project)
+          ret = tsk->project;
+        else
+          ret = strdup("  ");
         *free_field = false;
         break;
 
     case FIELD_DESCRIPTION:
-        ret = tsk->description;
+        if (tsk->description)
+          ret = tsk->description;
+        else
+          ret = strdup(" ");
         *free_field = false;
         break;
+
+    case FIELD_URGENCY:
+        ret = calloc(5, sizeof(char));
+        if (tsk->urgency)
+        {
+          asprintf(&ret, "%4.1f", tsk->urgency); 
+        }
+        else
+          ret = strdup("  ");
+        break; 
+
+
 
     case FIELD_DUE:
         if (tsk->due) {
@@ -383,12 +404,39 @@ static char* field_to_str(struct fmt_field* this, bool* free_field,
 
         break;
 
-    case FIELD_PRIORITY:
-        if (tsk->priority) {
-            ret = calloc(2, sizeof(char));
-            *ret = tsk->priority;
+    case FIELD_ENTRY:
+        if (tsk->entry) {
+            ret = utc_date(tsk->entry);
+        } else {
+            ret = strdup(" ");
         }
 
+        break;
+
+
+
+    case FIELD_TOTALACTIVETIME:
+        if (tsk->totalactivetime) {
+            int hours = (int) tsk->totalactivetime /  3600;
+            int minutes = (int) tsk->totalactivetime /  60;
+            minutes = minutes - hours * 60;
+            asprintf(&ret , "%3d:%02d", hours, minutes); 
+           /* asprintf(&ret , "%ld s", tsk->totalactivetime); */
+            /* ret = utc_time(tsk->totalactivetime); */
+        } else {
+            ret = strdup("      ");
+        }
+
+        break;
+
+
+
+    case FIELD_PRIORITY:
+        ret = calloc(1, sizeof(char));
+        if (tsk->priority) {
+            *ret = tsk->priority;
+        } else
+           ret = strdup (" ");
         break;
 
     case FIELD_UUID:
@@ -448,21 +496,24 @@ struct conditional_fmt_field* parse_conditional(char** str) { /* {{{ */
     int ret, addlen = 0;
 
     /* look for positive and negative */
-    ret = sscanf(*str, "?%m[^?]?%m[^?]?%m[^?]?", &condition, &positive, &negative);
+    condition = malloc(20);
+    positive = malloc(10);
+    negative = malloc(10);
+    ret = sscanf(*str, "?%[^?]?%[^?]?%[^?]?", condition, positive, negative);
 
     if (ret == 3) {
         goto parse;
     }
 
     /* look for positive */
-    ret = sscanf(*str, "?%m[^?]?%m[^?]??", &condition, &positive);
+    ret = sscanf(*str, "?%[^?]?%[^?]??", condition, positive);
 
     if (ret == 2) {
         goto parse;
     }
 
     /* look for negative */
-    ret = sscanf(*str, "?%m[^?]??%m[^?]?", &condition, &negative);
+    ret = sscanf(*str, "?%[^?]??%[^?]?", condition, negative);
 
     if (ret == 2) {
         goto parse;

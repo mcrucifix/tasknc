@@ -221,7 +221,8 @@ bool eval_rules(char* rule, const struct task* tsk, const bool selected) { /* {{
     }
 
     /* regex match */
-    ret = sscanf(rule, "~%c '%m[^\']'", &pattern, &regex);
+    regex = malloc(20);
+    ret = sscanf(rule, "~%c '%[^\']'", &pattern, regex);
 
     if (ret > 0 && pattern >= 'A' && pattern <= 'Z') {
         pattern += 32;
@@ -545,7 +546,7 @@ int set_default_colors(void) { /* {{{ */
     /* create initial color rules */
     add_color_rule(OBJECT_HEADER, NULL, COLOR_BLUE, COLOR_BLACK);
     add_color_rule(OBJECT_TASK, NULL, -1, -1);
-    add_color_rule(OBJECT_TASK, "~s", COLOR_CYAN, COLOR_BLACK);
+    add_color_rule(OBJECT_TASK, "~s", COLOR_YELLOW, COLOR_BLUE);
     add_color_rule(OBJECT_ERROR, NULL, COLOR_RED, -1);
 
     return 0;
