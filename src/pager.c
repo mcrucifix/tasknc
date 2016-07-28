@@ -383,4 +383,25 @@ void view_task(struct task* this) { /* {{{ */
     free(title);
 } /* }}} */
 
+void view_task_annotations(struct task* this) { /* {{{ */
+    /* run `task info` and print it to a window */
+    char* cmdstr;
+    char* title;
+
+    /* build command and title */
+    asprintf(&cmdstr, "task %s all rc._forcecolor=no rc.defaultwidth=%d 2>&1",
+             this->uuid, cols - 4);
+    title = (char*)eval_format(cfg.formats.view_compiled, this);
+
+    /* run pager */
+    pager_command(cmdstr, title, 0, 1, 4);
+
+    /* clean up */
+    free(cmdstr);
+    free(title);
+} /* }}} */
+
+
+
+
 // vim: et ts=4 sw=4 sts=4

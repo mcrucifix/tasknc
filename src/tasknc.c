@@ -91,6 +91,7 @@ struct funcmap funcmaps[] = {
     {"f_redraw",    (void*) force_redraw,                 0, MODE_ANY},
     {"help",        (void*) help_window,                  0, MODE_ANY},
     {"modify",      (void*) key_tasklist_modify,          0, MODE_TASKLIST},
+    {"annotate",    (void*) key_tasklist_annotate,        0, MODE_TASKLIST},
     {"quit",        (void*) key_done,                     0, MODE_TASKLIST},
     {"quit",        (void*) key_pager_close,              0, MODE_PAGER},
     {"reload",      (void*) key_tasklist_reload,          0, MODE_TASKLIST},
@@ -248,9 +249,10 @@ void configure(void) { /* {{{ */
     add_keybind('c',           key_tasklist_complete,    NULL, MODE_ANY);
     add_keybind('a',           key_tasklist_add,         NULL, MODE_TASKLIST);
     add_keybind('m',           key_tasklist_modify,      NULL, MODE_TASKLIST);
+    add_keybind('w',           key_tasklist_annotate,    NULL, MODE_TASKLIST);
     add_keybind('v',           key_tasklist_view,        NULL, MODE_TASKLIST);
-    add_keybind(13,            key_tasklist_view,        NULL, MODE_TASKLIST);
-    add_keybind(KEY_ENTER,     key_tasklist_view,        NULL, MODE_TASKLIST);
+    add_keybind(13,            key_tasklist_view_annotations,        NULL, MODE_TASKLIST);
+    add_keybind(KEY_ENTER,     key_tasklist_view_annotations,        NULL, MODE_TASKLIST);
     add_keybind('s',           key_tasklist_sort,        NULL, MODE_TASKLIST);
     add_keybind('/',           key_tasklist_search,      NULL, MODE_TASKLIST);
     add_keybind('n',           key_tasklist_search_next, NULL, MODE_TASKLIST);

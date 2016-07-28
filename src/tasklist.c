@@ -105,6 +105,28 @@ void key_tasklist_filter(const char* arg) { /* {{{ */
     reload = true;
 } /* }}} */
 
+void key_tasklist_annotate(const char* arg) { /* {{{ */
+    /* handle a keyboard direction to modify a task
+     * arg - the modifications to apply (pass NULL to prompt user)
+     *       this will be appended to `task UUID modify `
+     */
+    char* argstr;
+
+    if (arg == NULL) {
+        statusbar_getstr(&argstr, "annotate: ");
+        wipe_statusbar();
+    } else {
+        argstr = strdup(arg);
+    }
+
+    /* task_modify(argstr);  */
+    task_execute_on_current("annotate",argstr); 
+    free(argstr);
+
+    statusbar_message(cfg.statusbar_timeout, "task annotated");
+    redraw = true;
+} /* }}} */
+
 void key_tasklist_modify(const char* arg) { /* {{{ */
     /* handle a keyboard direction to modify a task
      * arg - the modifications to apply (pass NULL to prompt user)
@@ -119,12 +141,15 @@ void key_tasklist_modify(const char* arg) { /* {{{ */
         argstr = strdup(arg);
     }
 
-    task_modify(argstr);
+    /* task_modify(argstr);  */
+    task_execute_on_current("modify",argstr); 
     free(argstr);
 
     statusbar_message(cfg.statusbar_timeout, "task modified");
     redraw = true;
 } /* }}} */
+
+
 
 
 void key_tasklist_add(const char* arg) { /* {{{ */
@@ -416,6 +441,14 @@ void key_tasklist_view(void) { /* {{{ */
     /* run task info on a task and display in pager */
     view_task(get_task_by_position(selline));
 } /* }}} */
+
+
+
+void key_tasklist_view_annotations(void) { /* {{{ */
+    /* run task annotaions on a task and display in pager */
+    view_task_annotations(get_task_by_position(selline));
+} /* }}} */
+
 
 void tasklist_check_curs_pos(void) { /* {{{ */
     /* check if the cursor is in a valid position */

@@ -11,13 +11,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <time.h>
 #include "common.h"
 #include "config.h"
 #include "log.h"
 #include "sort.h"
 #include "tasklist.h"
 #include "tasks.h"
+#include "iso8601.h"
 
 /* local function declarations */
 static time_t strtotime(const char* timestr);
@@ -544,6 +544,7 @@ void set_date(time_t* field, char** line) { /* {{{ */
     if (ret != 1) {
         tnc_fprintf(logfp, LOG_ERROR, "error parsing time @ %s", *line);
     } else {
+        field = calloc (1, sizeof(time_t));
         *field = strtotime(tmp);
         tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, "time: %d", (int)*field);
         free(tmp);
@@ -599,13 +600,21 @@ void set_duration(long* field, char** line) { /* {{{ */
      */
 
     char*   tmp;
+    char*   flag;
     tmp = malloc(10);
-    char*   tmp2;
-    tmp2 = malloc(10);
-    int     ret = sscanf(*line, "\"%[0-9]%[seconds]\"", tmp, tmp2);
-    ret = sscanf(tmp, "%ld", field);
+    // char*   tmp2;
+    // tmp2 = malloc(10);
 
-    if (ret != 1) {
+    int ret = 0;
+
+    ret = sscanf(*line, "\"%[PT0-9DHMS]\"", tmp);
+     // field = calloc(1, sizeof(time_t));
+    flag = calloc(1, sizeof(char));
+    parseISO8601 (tmp, field, flag);
+    // printf("tmp is %s and field is %ld and flag %c ", tmp, *field, *flag); //
+     // *field = total_time(tmp);
+
+    if (ret != 1 || *flag != 'P') {
         tnc_fprintf(logfp, LOG_ERROR, "error parsing activetime  @ %s", *line);
     } else {
         tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, "time: %ld", *field);
@@ -792,7 +801,7 @@ bool task_match(const struct task* cur, const char* str) { /* {{{ */
 } /* }}} */
 
 void task_add(const char* argstr) { /* {{{ */
-    /* run a modify command on the selected task
+    /* run a add command on the selected task
      * argstr - the command to run on the selected task
      *          this will be appended to `task UUID modify `
      */
@@ -821,10 +830,10 @@ void task_add(const char* argstr) { /* {{{ */
 
 
 
-void task_modify(const char* argstr) { /* {{{ */
+void task_execute_on_current(const char* command, const char* argstr) { /* {{{ */
     /* run a modify command on the selected task
      * argstr - the command to run on the selected task
-     *          this will be appended to `task UUID modify `
+     *          this will be appended to `task UUID $command`
      */
     struct task*    cur;
     char*           cmd;
@@ -838,9 +847,10 @@ void task_modify(const char* argstr) { /* {{{ */
     }
 
     cur = get_task_by_position(selline);
-    cmd = calloc(64 + arglen, sizeof(char));
+    /* cmd = calloc(64 + arglen, sizeof(char)); */
 
-    strcpy(cmd, "task %s modify ");
+    asprintf(&cmd, "task %%s %s ", command);
+    printf(cmd);
 
     if (arglen > 0) {
         strcat(cmd, argstr);
@@ -861,4 +871,45 @@ void task_modify(const char* argstr) { /* {{{ */
     free(cmd);
 } /* }}} */
 
+
+// void task_modify(const char* argstr) { /* {{{ */
+//     /* run a modify command on the selected task
+//      * argstr - the command to run on the selected task
+//      *          this will be appended to `task UUID modify `
+//      */
+//     struct task*    cur;
+//     char*           cmd;
+//     char*           uuid;
+//     int             arglen;
+// 
+//     if (argstr != NULL) {
+//         arglen = strlen(argstr);
+//     } else {
+//         arglen = 0;
+//     }
+// 
+//     cur = get_task_by_position(selline);
+//     cmd = calloc(64 + arglen, sizeof(char));
+// 
+//     strcpy(cmd, "task %s modify ");
+// 
+//     if (arglen > 0) {
+//         strcat(cmd, argstr);
+//     }
+// 
+//     task_background_command(cmd);
+// 
+//     uuid = strdup(cur->uuid);
+//     reload_task(cur);
+// 
+//     if (cfg.follow_task) {
+//         set_position_by_uuid(uuid);
+//         tasklist_check_curs_pos();
+//     }
+// 
+//     check_free(uuid);
+// 
+//     free(cmd);
+// } /* }}} */
+// 
 // vim: et ts=4 sw=4 sts=4
