@@ -16,6 +16,9 @@
 #include "statusbar.h"
 #include "tasknc.h"
 
+
+int project_completion (const wchar_t* cmdstr, wchar_t* completion);
+
 /**
  * prompt index structure  to contain records for a prompt
  * prompt - the string identifying the prompt
@@ -257,6 +260,8 @@ int statusbar_getstr(char** str, const char* msg) { /* {{{ */
     wchar_t*                    wstr = calloc(3 * COLS, sizeof(wchar_t));
     wint_t                      c;
 
+    wchar_t* completion = calloc (200, sizeof(wchar_t));
+
     /* set up curses */
     set_curses_mode(NCURSES_MODE_STD);
     curs_set(1);
@@ -367,6 +372,20 @@ int statusbar_getstr(char** str, const char* msg) { /* {{{ */
             position = str_len;
             break;
 
+        case 9:
+            // completion = NULL;
+            // printf("TAB PRESSED !!! ");
+            if (project_completion (wstr, completion) > 0)
+             {
+             ;  
+             //wprintf(L"%ls\n",completion);
+             wcscat(wstr, completion);
+             position += wcslen(completion);
+             str_len += wcslen(completion);
+             }
+            break;
+
+
         default:
             wstr[position] = c;
             position++;
@@ -441,4 +460,4 @@ void statusbar_timeout(void) { /* {{{ */
     }
 } /* }}} */
 
-// vim: et ts=4 sw=4 sts=4
+// vim: et ts=3 sw=4 sts=4

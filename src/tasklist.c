@@ -375,36 +375,43 @@ void key_tasklist_toggle_started(void) { /* {{{ */
     /* toggle whether a task is started */
     time_t          now;
     struct task*    cur = get_task_by_position(selline);
+    char            line[TOTALLENGTH];
     char*           cmdstr;
     char*           action;
     char*           actionpast;
     char*           reply;
-    char            status_out[200];
+     // char            status_out[200];
     FILE*           cmdout;
     int             ret;
-    int             ret_status_out;
+    // int             ret_status_out;
     bool            started = cur->start > 0;/* check whether task is started */
 
 
     /* generate command */
+    printf ("STARTED = %ld ", cur->start);
     cmdstr = calloc(UUIDLENGTH + 16, sizeof(char));
     strcpy(cmdstr, "task ");
     strcat(cmdstr, cur->uuid);
     action = started ? " stop" : " start";
     strcat(cmdstr, action);
-    strcat(cmdstr, " 2>&1"); 
+    strcat(cmdstr, " 2> /dev/null"); 
 
     tnc_fprintf(logfp, LOG_DEBUG, "running command: %s", cmdstr);
-    /*printf( "running command: %s", cmdstr);*/
+    printf( "running command: %s", cmdstr);
     /* added to redirect ouptut */
 
     /* run command */
     cmdout = popen(cmdstr, "r");
-    free(cmdstr);
-    ret_status_out = fscanf(cmdout, "%[^\n]", status_out);
+
+    // while (ret_status_out != EOF) {
+    //   ret_status_out = fscanf(cmdout, "%[^\n]", status_out);
+    // }
     /* printf("status out ::: %s ", status_out); */
-    ret_status_out = 1;
+
+    while (fgets(line, sizeof(struct line) - 1, cmdout) != NULL) {;}
+
     ret = pclose(cmdout);
+    free(cmdstr);
 
     /* check return value */
     if (WEXITSTATUS(ret) == 0) {
@@ -418,7 +425,7 @@ void key_tasklist_toggle_started(void) { /* {{{ */
     } else {
         asprintf(&reply, "task%s failed (%d)", action, WEXITSTATUS(ret));
     }
-    if (ret_status_out > 0) strcat (reply, status_out);
+    /*  if (ret_status_out > 0) strcat (reply, status_out); */
     statusbar_message(cfg.statusbar_timeout, reply);
     free(reply);
 } /* }}} */

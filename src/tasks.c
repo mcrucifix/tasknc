@@ -137,9 +137,9 @@ struct task* get_tasks(char* uuid) { /* {{{ */
     cmdstr = calloc(128, sizeof(char));
 
     if (cfg.version[0] < '2') {
-        strcat(cmdstr, "task export.json");
+        strcat(cmdstr, "task export.json status.not:deleted ");
     } else {
-        strcat(cmdstr, "task export");
+        strcat(cmdstr, "task export status.not:deleted ");
     }
 
     if (active_filter != NULL) {
@@ -544,7 +544,7 @@ void set_date(time_t* field, char** line) { /* {{{ */
     if (ret != 1) {
         tnc_fprintf(logfp, LOG_ERROR, "error parsing time @ %s", *line);
     } else {
-        field = calloc (1, sizeof(time_t));
+        /* field = calloc (1, sizeof(time_t)); */
         *field = strtotime(tmp);
         tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, "time: %d", (int)*field);
         free(tmp);
@@ -607,7 +607,7 @@ void set_duration(long* field, char** line) { /* {{{ */
 
     int ret = 0;
 
-    ret = sscanf(*line, "\"%[PT0-9DHMS]\"", tmp);
+    ret = sscanf(*line, "\"%[PT0-9.DHMS]\"", tmp);
      // field = calloc(1, sizeof(time_t));
     flag = calloc(1, sizeof(char));
     parseISO8601 (tmp, field, flag);
@@ -615,7 +615,7 @@ void set_duration(long* field, char** line) { /* {{{ */
      // *field = total_time(tmp);
 
     if (ret != 1 || *flag != 'P') {
-        tnc_fprintf(logfp, LOG_ERROR, "error parsing activetime  @ %s", *line);
+        tnc_fprintf(logfp, LOG_ERROR, "error parsing activetime  @ %s time = %ld", *line, *field);
     } else {
         tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, "time: %ld", *field);
     }
