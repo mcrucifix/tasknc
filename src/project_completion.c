@@ -8,13 +8,12 @@
 
 int project_completion (const wchar_t* cmdstr, wchar_t* completion)
 {
- wchar_t* buffer;
  FILE* cmd;
  int ret;
  int linelen = 1024;
  int sum;
- buffer = malloc(20);
 
+ wchar_t* buffer = calloc(256, sizeof(wchar_t));
  wchar_t* pattern = calloc(256, sizeof(wchar_t));
  wchar_t* line = calloc(256, sizeof(wchar_t));
 
@@ -22,11 +21,12 @@ int project_completion (const wchar_t* cmdstr, wchar_t* completion)
  sum = 0;
  cmd = popen("task _project", "r"); 
 
- swscanf(cmdstr,L"%ls project:%ls", buffer, pattern);
+ if (swscanf(cmdstr,L"%ls project:%ls", buffer, pattern) == 2 || 
+    (swscanf(cmdstr,L"project:%ls",  pattern) == 1 ))
+ {
   // wprintf(L"cmdstr is %ls \n", cmdstr); 
   // wprintf(L"pattern is buffer %ls pattern %ls \n", buffer, pattern); 
  wcscat(pattern,L" %ls \n");
- free(buffer);
 
  while ( fgetws(line, linelen-1, cmd) != NULL ) 
  {    
@@ -35,8 +35,11 @@ int project_completion (const wchar_t* cmdstr, wchar_t* completion)
    sum += ret;
  }
  pclose(cmd);
- 
+ }
 
+ free(buffer);
+ free(pattern);
+ free(line);
  return sum;
 
 }
