@@ -15,9 +15,9 @@
 #include "log.h"
 #include "statusbar.h"
 #include "tasknc.h"
+#include "completion.h"
 
 
-int project_completion (const wchar_t* cmdstr, wchar_t* completion);
 
 /**
  * prompt index structure  to contain records for a prompt
@@ -254,6 +254,8 @@ int statusbar_getstr(char** str, const char* msg) { /* {{{ */
     int                         charlen;
     int                         ret;
     bool                        done = false;
+    bool                        tabtwice = false;
+    bool                        tabtwice_buffer = false;
     const int                   msglen = strlen(msg);
     const struct prompt_index*  pindex = get_prompt_index(msg);
     wchar_t*                    tmp;
@@ -268,6 +270,8 @@ int statusbar_getstr(char** str, const char* msg) { /* {{{ */
 
     /* get keys and buffer them */
     while (!done) {
+        tabtwice = tabtwice_buffer;
+        tabtwice_buffer = false;
         wipe_statusbar();
         umvaddstr(statusbar, 0, 0, msg);
         mvwaddnwstr(statusbar, 0, msglen, wstr, str_len);
@@ -373,16 +377,22 @@ int statusbar_getstr(char** str, const char* msg) { /* {{{ */
             break;
 
         case 9:
-            // completion = NULL;
-            // printf("TAB PRESSED !!! ");
-            if (project_completion (wstr, completion) > 0)
-             {
-             ;  
-             //wprintf(L"%ls\n",completion);
-             wcscat(wstr, completion);
-             position += wcslen(completion);
-             str_len += wcslen(completion);
-             }
+            if (tabtwice)
+            {
+              printf("DOUBLE TAB PRESSED !!! "); 
+              tabtwice_buffer = false; 
+            }
+            else
+            {
+              if (project_completion (wstr, completion) > 0)
+               {
+               // unique match ? 
+               wcscat(wstr, completion);
+               position += wcslen(completion);
+               str_len += wcslen(completion);
+               }
+              tabtwice_buffer = true;
+            }
             break;
 
 

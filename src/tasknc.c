@@ -4,7 +4,8 @@
  */
 
 #define _GNU_SOURCE
-#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE 700
+
 #include <curses.h>
 #include <getopt.h>
 #include <locale.h>
@@ -210,14 +211,17 @@ void configure(void) { /* {{{ */
     /* get task version */
     cmd = popen("task --version ", "r");
   
+    cfg.version = calloc (80, sizeof(char));
 
     while (ret != 1) {
-        cfg.version = malloc ( 80 ) ;
-        ret = fscanf(cmd, "%[0-9.-] ", (cfg.version)); 
-        /*ret = fscanf(cmd, "%[0-9.-] ", str1); */
-        /*cfg.version = str1;  */
+        // cfg.version = malloc ( 80 ) ;
+        ret = fscanf(cmd, "%[0-9.-][80] ", (cfg.version));  
+        // ret = fscanf(cmd, "%[0-9.-] ", str1);  //
+        //  printf("config %s \n", str1); //
+        // cfg.version = str1;   //
     }
-
+ 
+   //  free(str1); //
     printf("task version: %s", cfg.version);
     tnc_fprintf(logfp, LOG_DEBUG, "task version: %s", cfg.version);
     pclose(cmd);
