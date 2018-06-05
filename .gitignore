@@ -4,3 +4,15 @@ tags
 tasknc.1
 *.o
 build
+a.out
+2
+Makefile
+tasknc.dSYM/Contents/Info.plist
+test/tests.c
+
+RCS/
+backup-121920170949-pre-tasknc.tgz
+description-pak
+doc-pak/
+tasknc_20171022-1_amd64.deb
+tasknc_20171219-1_amd64.deb

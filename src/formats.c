@@ -85,6 +85,7 @@ struct fmt_field* compile_format_string(char* fmt) { /* {{{ */
     static const char* task_field_map[] = {
         [FIELD_PROJECT]     = "project",
         [FIELD_DESCRIPTION] = "description",
+        [FIELD_CATEGORY] = "category",
         [FIELD_URGENCY]     = "urgency",
         [FIELD_TOTALACTIVETIME] = "totalactivetime",
         [FIELD_DUE]         = "due",
@@ -382,6 +383,15 @@ static char* field_to_str(struct fmt_field* this, bool* free_field,
           ret = strdup(" ");
         *free_field = false;
         break;
+
+    case FIELD_CATEGORY:
+        if (tsk->category)
+          ret = tsk->category;
+        else
+          ret = strdup(" ");
+        *free_field = false;
+        break;
+
 
     case FIELD_URGENCY:
         ret = calloc(5, sizeof(char));

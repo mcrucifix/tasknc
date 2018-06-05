@@ -388,32 +388,33 @@ void key_tasklist_toggle_started(void) { /* {{{ */
 
 
     /* generate command */
-    printf ("STARTED = %ld ", cur->start);
-    cmdstr = calloc(UUIDLENGTH + 16, sizeof(char));
-    strcpy(cmdstr, "task ");
-    strcat(cmdstr, cur->uuid);
-    action = started ? " stop" : " start";
-    strcat(cmdstr, action);
-    strcat(cmdstr, " 2> /dev/null"); 
+     printf ("STARTED = %ld ", cur->start);
+     cmdstr = calloc(UUIDLENGTH + 256, sizeof(char));
+     strcpy(cmdstr, "task ");
+     strcat(cmdstr, cur->uuid);
+     action = started ? " stop" : " start";
+     strcat(cmdstr, action);
+     strcat(cmdstr, " 2> /dev/null"); 
 
-    tnc_fprintf(logfp, LOG_DEBUG, "running command: %s", cmdstr);
-    printf( "running command: %s", cmdstr);
-    /* added to redirect ouptut */
+     tnc_fprintf(logfp, LOG_DEBUG, "running command: %s", cmdstr);
+     printf( "running command: %s", cmdstr);
+     /* added to redirect ouptut */
 
-    /* run command */
-    cmdout = popen(cmdstr, "r");
+     /* run command */
+     cmdout = popen(cmdstr, "r");
 
-    // while (ret_status_out != EOF) {
-    //   ret_status_out = fscanf(cmdout, "%[^\n]", status_out);
-    // }
-    /* printf("status out ::: %s ", status_out); */
+     // while (ret_status_out != EOF) {
+     //   ret_status_out = fscanf(cmdout, "%[^\n]", status_out);
+     // }
+     /* printf("status out ::: %s ", status_out); */
 
-    while (fgets(line, sizeof(struct line) - 1, cmdout) != NULL) {;}
+     while (fgets(line, sizeof(struct line) - 1, cmdout) != NULL) {;}
 
-    ret = pclose(cmdout);
-    free(cmdstr);
+     ret = pclose(cmdout);
+     free(cmdstr);
 
     /* check return value */
+    
     if (WEXITSTATUS(ret) == 0) {
         time(&now);
         cur->start = started ? 0 : now;

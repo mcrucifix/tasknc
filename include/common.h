@@ -67,6 +67,7 @@ struct task {
     char* project;
     char priority;
     char* description;
+    char* category; 
     float urgency;
     /* color caching */
     int selpair;
@@ -88,6 +89,7 @@ enum fmt_field_type {
     FIELD_DATE,
     FIELD_PROJECT,
     FIELD_DESCRIPTION,
+    FIELD_CATEGORY, 
     FIELD_ENTRY,
     FIELD_URGENCY,
     FIELD_DUE,

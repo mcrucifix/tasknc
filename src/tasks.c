@@ -49,6 +49,10 @@ char free_task(struct task* tsk) { /* {{{ */
         free(tsk->description);
     }
 
+    if (tsk->category != NULL) {
+        free(tsk->category);
+    }
+
     free(tsk);
 
     return ret;
@@ -294,6 +298,7 @@ struct task* malloc_task(void) { /* {{{ */
     tsk->project        = NULL;
     tsk->priority       = 0;
     tsk->description    = NULL;
+    tsk->category       = NULL;
     tsk->urgency        = 0.000;
     tsk->next           = NULL;
     tsk->prev           = NULL;
@@ -352,6 +357,8 @@ struct task* parse_task(char* line) { /* {{{ */
             set_int(&(tsk->index), &line);
         } else if (str_eq(field, "description")) {
             set_string(&(tsk->description), &line);
+        } else if (str_eq(field, "cat")) {
+            set_string(&(tsk->category), &line);
         } else if (str_eq(field, "project")) {
             set_string(&(tsk->project), &line);
         } else if (str_eq(field, "tags")) {
@@ -593,7 +600,7 @@ void set_float(float* field, char** line) { /* {{{ */
 
 
 
-void set_duration(long* field, char** line) { /* {{{ */
+void set_duration(time_t* field, char** line) { /* {{{ */
     /* set an integer field from the next contents of line
      * field - the field set the integer in
      * line  - the line to parse the integer from
@@ -601,20 +608,27 @@ void set_duration(long* field, char** line) { /* {{{ */
 
     char*   tmp;
     char*   flag;
-    tmp = malloc(10);
+    time_t*    duration ;
+    tmp = calloc(30, sizeof(char));
+    duration = calloc(1, sizeof(time_t));
     // char*   tmp2;
     // tmp2 = malloc(10);
 
     int ret = 0;
-
-    ret = sscanf(*line, "\"%[PT0-9.DHMS]\"", tmp);
-     // field = calloc(1, sizeof(time_t));
-    flag = calloc(1, sizeof(char));
-    parseISO8601 (tmp, field, flag);
+    *duration = 120;
+    ret =  sscanf(*line, "\"%ld\"", field);
+    if (ret != 1) 
+    {
+      ret = sscanf(*line, "\"%[PT0-9.DHMS]\"", tmp);
+       // field = calloc(1, sizeof(time_t));
+      flag = calloc(1, sizeof(char));
+      parseISO8601 (tmp, field, flag);
+      if (ret != 1 || *flag != 'P') ret = 0;
+    }
     // printf("tmp is %s and field is %ld and flag %c ", tmp, *field, *flag); //
      // *field = total_time(tmp);
 
-    if (ret != 1 || *flag != 'P') {
+    if (ret != 1) {
         tnc_fprintf(logfp, LOG_ERROR, "error parsing activetime  @ %s time = %ld", *line, *field);
     } else {
         tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, "time: %ld", *field);

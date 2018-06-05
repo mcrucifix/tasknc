@@ -258,6 +258,10 @@ void swap_tasks(struct task* a,
     a->priority = b->priority;
     b->priority = ctmp;
 
+    strtmp         = a->category;
+    a->category = b->category;
+    b->category = strtmp;
+
     strtmp         = a->description;
     a->description = b->description;
     b->description = strtmp;
