@@ -35,7 +35,7 @@ void tasklist_check_curs_pos(void);
 void tasklist_print_task(const int tasknum, const struct task* this, const int count);
 void tasklist_print_task_list(void);
 void tasklist_remove_task(struct task* this);
-void tasklist_task_add(void);
+void tasklist_task_add(const char* arg);
 void tasklist_window(void);
 
 extern bool reload;

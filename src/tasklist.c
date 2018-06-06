@@ -166,7 +166,7 @@ void key_tasklist_add(const char* arg) { /* {{{ */
         argstr = strdup(arg);
     }
 
-    task_add(argstr);
+    tasklist_task_add(argstr);
     free(argstr);
 
     statusbar_message(cfg.statusbar_timeout, "task added");
@@ -427,7 +427,7 @@ void key_tasklist_toggle_started(void) { /* {{{ */
         asprintf(&reply, "task%s failed (%d)", action, WEXITSTATUS(ret));
     }
     /*  if (ret_status_out > 0) strcat (reply, status_out); */
-    statusbar_message(cfg.statusbar_timeout, reply);
+    statusbar_message(cfg.statusbar_timeout, "%s", reply);
     free(reply);
 } /* }}} */
 
@@ -509,7 +509,7 @@ void tasklist_command_message(const int ret,
     if (ret != 0) {
         statusbar_message(cfg.statusbar_timeout, fail, ret);
     } else {
-        statusbar_message(cfg.statusbar_timeout, success);
+        statusbar_message(cfg.statusbar_timeout, "%s",  success);
     }
 } /* }}} */
 
@@ -724,6 +724,7 @@ void tasklist_remove_task(struct task* this) { /* {{{ */
     if (this->next != NULL) {
         this->next->prev = this->prev;
     }
+    
 
     free_task(this);
     taskcount--;
@@ -731,20 +732,34 @@ void tasklist_remove_task(struct task* this) { /* {{{ */
     redraw = true;
 } /* }}} */
 
-void tasklist_task_add(void) { /* {{{ */
-    /* create a new task by adding a generic task
-     * then letting the user edit it
+
+void tasklist_task_add(const char* argstr) { /* {{{ */
+    /* run a add command on the selected task
+     * argstr - the command to run on the selected task
+     *          this will be appended to `task UUID modify `
      */
-    FILE*           cmdout;
     char*           cmd;
-    char            line[TOTALLENGTH];
-    char*           failmsg;
+    FILE*           cmdout; 
+    int             arglen;
+    int             pret;
     unsigned short  tasknum;
     int             ret = 0;
-    int             pret;
+    char            line[TOTALLENGTH];
 
-    /* add new task */
-    cmd = strdup("task add new task");
+    if (argstr != NULL) {
+        arglen = strlen(argstr);
+    } else {
+        arglen = 0;
+    }
+
+    cmd = calloc(64 + arglen, sizeof(char));
+
+    strcpy(cmd, "task add ");
+
+    if (arglen > 0) {
+        strcat(cmd, argstr);
+    }
+
     tnc_fprintf(logfp, LOG_DEBUG, "running: %s", cmd);
     cmdout = popen(cmd, "r");
 
@@ -755,28 +770,71 @@ void tasklist_task_add(void) { /* {{{ */
     }
 
     pret = pclose(cmdout);
-    free(cmd);
 
-    if (WEXITSTATUS(pret) != 0) {
-        failmsg = strdup("task add failed (%d)");
+    ret = WEXITSTATUS(pret);
+    if (ret != 0) {
         goto done;
     }
 
-    /* edit task */
-    if (cfg.version[0] < '2') {
-        asprintf(&cmd, "task edit %d", tasknum);
-    } else {
-        asprintf(&cmd, "task %d edit", tasknum);
-    }
 
-    ret = task_interactive_command(cmd);
+    /* force redraw */
+    head = get_tasks(NULL);
     free(cmd);
-    failmsg = strdup("task edit failed (%s)");
-    goto done;
 
 done:
-    tasklist_command_message(ret, failmsg, "task add succeeded");
-    free(failmsg);
+    tasklist_command_message(ret, "task add failed (%d) ", "task add succeeded");
+
 } /* }}} */
+
+
+
+
+//void tasklist_task_add(void) { /* {{{ */
+//    /* create a new task by adding a generic task
+//     * then letting the user edit it
+//     */
+//    FILE*           cmdout;
+//    char*           cmd;
+//    char            line[TOTALLENGTH];
+//    char*           failmsg;
+//    unsigned short  tasknum;
+//    int             ret = 0;
+//    int             pret;
+//
+//    /* add new task */
+//    cmd = strdup("task add new task");
+//    tnc_fprintf(logfp, LOG_DEBUG, "running: %s", cmd);
+//    cmdout = popen(cmd, "r");
+//
+//    while (fgets(line, sizeof(struct line) - 1, cmdout) != NULL) {
+//        if (sscanf(line, "Created task %hu.", &tasknum)) {
+//            break;
+//        }
+//    }
+//
+//    pret = pclose(cmdout);
+//    free(cmd);
+//
+//    if (WEXITSTATUS(pret) != 0) {
+//        failmsg = strdup("task add failed (%d)");
+//        goto done;
+//    }
+//
+//    /* edit task */
+//    if (cfg.version[0] < '2') {
+//        asprintf(&cmd, "task edit %d", tasknum);
+//    } else {
+//        asprintf(&cmd, "task %d edit", tasknum);
+//    }
+//
+//    ret = task_interactive_command(cmd);
+//    free(cmd);
+//    failmsg = strdup("task edit failed (%s)");
+//    goto done;
+//
+//done:
+//    tasklist_command_message(ret, failmsg, "task add succeeded");
+//    free(failmsg);
+//} /* }}} */
 
 // vim: et ts=4 sw=4 sts=4

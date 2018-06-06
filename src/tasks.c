@@ -817,35 +817,6 @@ bool task_match(const struct task* cur, const char* str) { /* {{{ */
     }
 } /* }}} */
 
-void task_add(const char* argstr) { /* {{{ */
-    /* run a add command on the selected task
-     * argstr - the command to run on the selected task
-     *          this will be appended to `task UUID modify `
-     */
-    char*           cmd;
-    int             arglen;
-
-    if (argstr != NULL) {
-        arglen = strlen(argstr);
-    } else {
-        arglen = 0;
-    }
-
-    cmd = calloc(64 + arglen, sizeof(char));
-
-    strcpy(cmd, "task add ");
-
-    if (arglen > 0) {
-        strcat(cmd, argstr);
-    }
-
-    task_background_command(cmd);
-
-
-    free(cmd);
-} /* }}} */
-
-
 
 void task_execute_on_current(const char* command, const char* argstr) { /* {{{ */
     /* run a modify command on the selected task
