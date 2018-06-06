@@ -138,6 +138,7 @@ struct task* get_tasks(char* uuid) { /* {{{ */
     struct task*    new_head;
 
     /* generate & run command */
+
     cmdstr = calloc(128, sizeof(char));
 
     if (cfg.version[0] < '2') {
@@ -162,7 +163,6 @@ struct task* get_tasks(char* uuid) { /* {{{ */
     if (cmd == NULL) {
         tnc_fprintf(logfp, LOG_ERROR, "could not execute command: (%s)", cmdstr);
         tnc_fprintf(stdout, LOG_ERROR, "could not execute command: (%s)", cmdstr);
-        free(cmdstr);
         return NULL;
     }
 
@@ -196,7 +196,7 @@ struct task* get_tasks(char* uuid) { /* {{{ */
         /* log line */
         tmp = strchr(line, '\n');
         *tmp = 0;
-        tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, line);
+        tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, "%s",  line);
 
         /* parse line */
         this = parse_task(line);
@@ -710,21 +710,22 @@ int task_background_command(const char* cmdfmt) { /* {{{ */
      * return is the return of the command run
      */
     struct task*    cur;
-    char*           cmdstr;
+    char*           cmdstr; 
     char*           line;
     FILE*           cmd;
     int             ret;
 
     /* build command */
+    cmdstr = calloc(128, sizeof(char));
     cur = get_task_by_position(selline);
-    asprintf(&cmdstr, cmdfmt, cur->uuid);
-    cmdstr = realloc(cmdstr, (strlen(cmdstr) + 6) * sizeof(char));
+    sprintf(cmdstr, cmdfmt, cur->uuid);
+    /* asprintf(&cmdstr, cmdfmt, cur->uuid);
+    cmdstr = realloc(cmdstr, (strlen(cmdstr) + 6) * sizeof(char)); */
     strcat(cmdstr, " 2>&1");
     tnc_fprintf(logfp, LOG_DEBUG, "running command: %s", cmdstr);
 
     /* run command in background */
     cmd = popen(cmdstr, "r");
-    free(cmdstr);
 
 
     while (!feof(cmd)) {
@@ -732,7 +733,7 @@ int task_background_command(const char* cmdfmt) { /* {{{ */
         ret = fscanf(cmd, "%[^\n]*", line);
 
         if (ret == 1) {
-            tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, line);
+            tnc_fprintf(logfp, LOG_DEBUG_VERBOSE, "line: %s", line);
             free(line);
         } else {
             break;
@@ -740,6 +741,8 @@ int task_background_command(const char* cmdfmt) { /* {{{ */
     }
 
     ret = pclose(cmd);
+
+    free(cmdstr);
 
     /* log command return value */
     if (WEXITSTATUS(ret) == 0 || WEXITSTATUS(ret) == 128 + SIGPIPE) {
@@ -861,10 +864,11 @@ void task_execute_on_current(const char* command, const char* argstr) { /* {{{ *
     }
 
     cur = get_task_by_position(selline);
-    /* cmd = calloc(64 + arglen, sizeof(char)); */
+    cmd = calloc(64 + arglen, sizeof(char)); 
 
-    asprintf(&cmd, "task %%s %s ", command);
-    printf(cmd);
+    /*asprintf(&cmd, "task %%s %s ", command); */
+    sprintf(cmd, "task %%s %s ", command);
+    printf("%s",cmd);
 
     if (arglen > 0) {
         strcat(cmd, argstr);
